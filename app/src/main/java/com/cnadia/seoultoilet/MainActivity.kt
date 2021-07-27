@@ -12,6 +12,8 @@ import android.os.AsyncTask
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.text.TextUtils
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
@@ -257,22 +259,31 @@ class MainActivity : AppCompatActivity() {
         task?.execute()
 
         searchBar.imageView.setOnClickListener {
-            val keyword = searchBar.autoCompleteTextView.text.toString()
-            if (TextUtils.isEmpty(keyword)) return@setOnClickListener
-
-            toilets.findByChildProperty("FNAME", keyword)?.let {
-                val myItem = itemMap[it]
-
-                val marker = clusterRenderer?.getMarker(myItem)
-                marker?.showInfoWindow()
-
-                googleMap?.moveCamera(
-                    CameraUpdateFactory.newLatLngZoom(
-                        LatLng(it.getDouble("Y_WGS84"), it.getDouble("X_WGS84")), DEFAULT_ZOOM_LEVEL))
-                clusterManager?.cluster()
-            }
-            searchBar.autoCompleteTextView.setText("")
+            startSearch()
         }
+        searchBar.autoCompleteTextView.setOnItemClickListener { adapterView, view, i, l ->
+            startSearch()
+        }
+    }
+
+    private fun startSearch() {
+        val keyword = searchBar.autoCompleteTextView.text.toString()
+        if (TextUtils.isEmpty(keyword)) return
+
+        toilets.findByChildProperty("FNAME", keyword)?.let {
+            val myItem = itemMap[it]
+
+            val marker = clusterRenderer?.getMarker(myItem)
+            marker?.showInfoWindow()
+
+            googleMap?.moveCamera(
+                CameraUpdateFactory.newLatLngZoom(
+                    LatLng(it.getDouble("Y_WGS84"), it.getDouble("X_WGS84")), DEFAULT_ZOOM_LEVEL
+                )
+            )
+            clusterManager?.cluster()
+        }
+        searchBar.autoCompleteTextView.setText("")
     }
 
     override fun onStop() {
